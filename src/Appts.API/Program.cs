@@ -1,39 +1,20 @@
-using Appts.API;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Appts.UserManagement.Application.Commands;
+using Appts.UserManagement.Infrastructure;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 ConfigurationManager Configuration = builder.Configuration;
 
-builder.Services.AddDbContext<ApptsDbContext>(options =>
-            options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApptsDbContext>()
-    .AddDefaultTokenProviders();
+var mediatRAssemblies = new[]
+{
+  Assembly.GetAssembly(typeof(RegisterUserCommand)), // UserManagement
+};
 
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = Configuration["Jwt:Issuer"],
-        ValidAudience = Configuration["Jwt:Issuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
-    };
-});
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(mediatRAssemblies));
+
+builder.Services.AddIdentityServices(Configuration);
 
 builder.Services.AddControllers();
 

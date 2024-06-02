@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Appts.UserManagement.Application.Commands;
+using Appts.UserManagement.Application.Models;
+using MediatR;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -11,20 +14,21 @@ namespace Appts.API.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly UserManager<UserModel> _userManager;
     private readonly IConfiguration _configuration;
+    private readonly ISender _sender;
 
-    public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+    public AuthController(UserManager<UserModel> userManager, IConfiguration configuration, ISender sender)
     {
         _userManager = userManager;
         _configuration = configuration;
+        _sender = sender;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-        var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-        var result = await _userManager.CreateAsync(user, model.Password);
+        var result = await _sender.Send(new RegisterUserCommand(new RegisterUserModel(model.Email, model.Password)));
 
         if (result.Succeeded)
         {
@@ -47,7 +51,7 @@ public class AuthController : ControllerBase
         return Unauthorized();
     }
 
-    private string GenerateJwtToken(ApplicationUser user)
+    private string GenerateJwtToken(UserModel user)
     {
         var claims = new[]
         {
