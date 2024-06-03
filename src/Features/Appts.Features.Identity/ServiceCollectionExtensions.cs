@@ -1,5 +1,4 @@
-﻿using Appts.UserManagement.Infrastructure.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -7,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace Appts.UserManagement.Infrastructure;
+namespace Appts.Features.Identity;
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration configuration)
@@ -37,7 +36,6 @@ public static class ServiceCollectionExtensions
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
             };
         });
-        services.AddTransient<IUserManagerService, UserManagerService>();
 
         return services;
     }

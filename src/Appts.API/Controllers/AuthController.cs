@@ -1,6 +1,5 @@
-﻿using Appts.UserManagement.Application.Commands;
-using Appts.UserManagement.Application.Models;
-using Appts.UserManagement.Infrastructure;
+﻿using Appts.Features.Identity;
+using Appts.Features.Identity.RegisterUser;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

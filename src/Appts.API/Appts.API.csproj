@@ -14,8 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Modules\UserManagement\Appts.UserManagement.Application\Appts.UserManagement.Application.csproj" />
-    <ProjectReference Include="..\Modules\UserManagement\Appts.UserManagement.Infrastructure\Appts.UserManagement.Infrastructure.csproj" />
+    <ProjectReference Include="..\Features\Appts.Features.Identity\Appts.Features.Identity.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
-using Appts.UserManagement.Application.Commands;
-using Appts.UserManagement.Infrastructure;
+using Appts.Features.Identity;
+using Appts.Features.Identity.RegisterUser;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
