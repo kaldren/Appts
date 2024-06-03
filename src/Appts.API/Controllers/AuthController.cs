@@ -1,5 +1,6 @@
 ﻿using Appts.UserManagement.Application.Commands;
 using Appts.UserManagement.Application.Models;
+using Appts.UserManagement.Infrastructure;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,11 @@ namespace Appts.API.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-    private readonly UserManager<UserModel> _userManager;
+    private readonly UserManager<ApplicationUser> _userManager;
     private readonly IConfiguration _configuration;
     private readonly ISender _sender;
 
-    public AuthController(UserManager<UserModel> userManager, IConfiguration configuration, ISender sender)
+    public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration, ISender sender)
     {
         _userManager = userManager;
         _configuration = configuration;
@@ -51,7 +52,7 @@ public class AuthController : ControllerBase
         return Unauthorized();
     }
 
-    private string GenerateJwtToken(UserModel user)
+    private string GenerateJwtToken(ApplicationUser user)
     {
         var claims = new[]
         {

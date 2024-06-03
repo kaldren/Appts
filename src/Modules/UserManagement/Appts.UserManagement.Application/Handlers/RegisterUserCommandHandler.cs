@@ -1,23 +1,21 @@
 ﻿using Appts.UserManagement.Application.Commands;
-using Appts.UserManagement.Application.Models;
+using Appts.UserManagement.Application.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
 namespace Appts.UserManagement.Application.Handlers;
 internal class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, IdentityResult>
 {
-    private readonly UserManager<UserModel> _userManager;
+    private readonly IUserManagerService _userManagerService;
 
-    public RegisterUserCommandHandler(UserManager<UserModel> userManager)
+    public RegisterUserCommandHandler(IUserManagerService userManagerService)
     {
-        _userManager = userManager;
+        _userManagerService = userManagerService;
     }
 
     public async Task<IdentityResult> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        var user = new UserModel { UserName = request.model.Email, Email = request.model.Email };
-
-        var result = await _userManager.CreateAsync(user, request.model.Password);
+        var result = await _userManagerService.CreateUserAsync(request.model, request.model.Password);
 
         return result;
     }

@@ -1,4 +1,5 @@
-﻿using Appts.UserManagement.Application.Models;
+﻿using Appts.UserManagement.Application.Interfaces;
+using Appts.UserManagement.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,7 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<ApptsDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-        services.AddIdentity<UserModel, IdentityRole>()
+        services.AddIdentity<ApplicationUser, IdentityRole>()
             .AddEntityFrameworkStores<ApptsDbContext>()
             .AddDefaultTokenProviders();
 
@@ -37,6 +38,7 @@ public static class ServiceCollectionExtensions
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))
             };
         });
+        services.AddTransient<IUserManagerService, UserManagerService>();
 
         return services;
     }
