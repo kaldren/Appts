@@ -1,5 +1,4 @@
 ﻿using Appts.Features.Identity;
-using Appts.Features.Identity.RegisterUser;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
