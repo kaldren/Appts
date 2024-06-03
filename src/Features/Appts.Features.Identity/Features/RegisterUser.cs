@@ -1,7 +1,11 @@
-﻿using MediatR;
+﻿using Appts.Features.Identity;
+using MediatR;
 using Microsoft.AspNetCore.Identity;
 
-namespace Appts.Features.Identity.RegisterUser;
+public record RegisterUserModel(string Email, string Password);
+
+public record RegisterUserCommand(RegisterUserModel model) : IRequest<IdentityResult>;
+
 internal class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, IdentityResult>
 {
     private UserManager<ApplicationUser> _userManager;
