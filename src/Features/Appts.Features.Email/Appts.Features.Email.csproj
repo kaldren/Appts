@@ -14,4 +14,8 @@
     <ProjectReference Include="..\Appts.Features.Identity\Appts.Features.Identity.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 </Project>
