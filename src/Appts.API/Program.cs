@@ -1,6 +1,7 @@
 using Appts.Features.Appointment.Features;
 using Appts.Features.Email.Features;
 using Appts.Features.Identity;
+using FastEndpoints;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,5 +32,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.UseFastEndpoints();
 
 app.Run();

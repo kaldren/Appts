@@ -1,9 +1,51 @@
 ﻿using Appts.Features.Identity;
 using Appts.Features.Identity.Events;
+using FastEndpoints;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 
+[HttpPost("api/identity/register")]
+[AllowAnonymous]
+public class RegisterUserEndpoint : Endpoint<RegisterUserModel,
+                                   Results<Ok<RegisterUserResponseModel>,
+                                           NotFound,
+                                           ProblemDetails>>
+{
+    private readonly IMediator _mediator;
+
+    public RegisterUserEndpoint(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    public override async Task<Results<Ok<RegisterUserResponseModel>,
+                                           NotFound,
+                                           ProblemDetails>> ExecuteAsync(RegisterUserModel request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new RegisterUserCommand(request));
+
+        if (result.Succeeded)
+        {
+            return TypedResults.Ok(new RegisterUserResponseModel(request.Email));
+        }
+
+        var errorMessages = result.Errors.Select(e => e.Description).ToList();
+
+        foreach (var error in errorMessages)
+        {
+            AddError(error);
+        }
+
+        return new FastEndpoints.ProblemDetails(ValidationFailures);
+    }
+}
+
 public record RegisterUserModel(string Email, string Password);
+
+public record RegisterUserResponseModel(string Email);
 
 public record RegisterUserCommand(RegisterUserModel model) : IRequest<IdentityResult>;
 
