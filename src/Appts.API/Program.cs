@@ -1,5 +1,6 @@
-using Appts.Features.Appointment.Features;
-using Appts.Features.Email.Features;
+using Appts.Features.Appointments;
+using Appts.Features.Appointments.Features;
+using Appts.Features.Emails.Features;
 using Appts.Features.Identity;
 using FastEndpoints;
 using System.Reflection;
@@ -19,6 +20,7 @@ var mediatRAssemblies = new[]
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(mediatRAssemblies));
 
 builder.Services.AddIdentityServices(Configuration);
+builder.Services.AddAppointmentsServices(Configuration);
 
 builder.Services.AddControllers();
 

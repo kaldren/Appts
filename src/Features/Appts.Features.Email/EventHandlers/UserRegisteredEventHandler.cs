@@ -1,7 +1,7 @@
 ﻿using Appts.Features.Identity.Events;
 using MediatR;
 
-namespace Appts.Features.Email.EventHandlers;
+namespace Appts.Features.Emails.EventHandlers;
 
 // TODO: Maybe extract all events to a common project so features don't have to reference each other directly
 public class UserRegisteredEventHandler : INotificationHandler<UserRegisteredEvent>

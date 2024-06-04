@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Appts.Features.Appointment.Events;
+namespace Appts.Features.Appointments.Events;
 internal class AppointmentDeletedEvent
 {
 }

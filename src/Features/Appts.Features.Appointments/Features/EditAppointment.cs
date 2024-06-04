@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Appts.Features.Appointment.Events;
-internal class AppointmentCreatedEvent
+namespace Appts.Features.Appointments.Features;
+internal class EditAppointment
 {
 }

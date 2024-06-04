@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Appts.Features.Email.Events;
+namespace Appts.Features.Emails.Events;
 internal class EmailSentEvent
 {
 }

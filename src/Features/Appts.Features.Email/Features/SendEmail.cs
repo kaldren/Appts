@@ -1,4 +1,4 @@
-﻿namespace Appts.Features.Email.Features;
+﻿namespace Appts.Features.Emails.Features;
 
 public class SendEmail
 {

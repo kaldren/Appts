@@ -1,4 +1,6 @@
-﻿using FastEndpoints;
+﻿using Appts.Features.Identity.Infrastructure;
+using Appts.Features.Identity.Models;
+using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

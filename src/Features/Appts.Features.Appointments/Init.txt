@@ -1,0 +1,3 @@
+﻿
+dotnet ef migrations add AppointmentsInit --context AppointmentsDbContext --output-dir Migrations --project .\Features\Appts.Features.Appointments --startup-project .\Appts.API
+dotnet ef database update --project .\Features\Appts.Features.Appointments --startup-project .\Appts.API --context AppointmentsDbContext

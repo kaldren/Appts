@@ -1,5 +1,5 @@
-﻿using Appts.Features.Identity;
-using Appts.Features.Identity.Events;
+﻿using Appts.Features.Identity.Events;
+using Appts.Features.Identity.Models;
 using FastEndpoints;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Features\Appts.Features.Appointment\Appts.Features.Appointment.csproj" />
-    <ProjectReference Include="..\Features\Appts.Features.Email\Appts.Features.Email.csproj" />
+    <ProjectReference Include="..\Features\Appts.Features.Appointments\Appts.Features.Appointments.csproj" />
+    <ProjectReference Include="..\Features\Appts.Features.Email\Appts.Features.Emails.csproj" />
     <ProjectReference Include="..\Features\Appts.Features.Identity\Appts.Features.Identity.csproj" />
   </ItemGroup>
 
