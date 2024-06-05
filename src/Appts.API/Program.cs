@@ -1,7 +1,8 @@
 using Appts.Features.Appointments;
-using Appts.Features.Appointments.Features;
+using Appts.Features.Appointments.Models;
 using Appts.Features.Emails.Features;
 using Appts.Features.Identity;
+using Appts.Features.Identity.Models;
 using FastEndpoints;
 using System.Reflection;
 
@@ -12,9 +13,9 @@ ConfigurationManager Configuration = builder.Configuration;
 
 var mediatRAssemblies = new[]
 {
-  Assembly.GetAssembly(typeof(RegisterUserCommand)), // Identity feature
+  Assembly.GetAssembly(typeof(ApplicationUser)), // Identity feature
   Assembly.GetAssembly(typeof(SendEmail)), // Email feature
-  Assembly.GetAssembly(typeof(CreateAppointment)), // Appointments feature
+  Assembly.GetAssembly(typeof(Appointment)), // Appointments feature
 };
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(mediatRAssemblies));
