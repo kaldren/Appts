@@ -47,6 +47,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        // Dummy token
         Http.DefaultRequestHeaders.Remove("Authorization");
         Http.DefaultRequestHeaders.Add("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lNkBleGFtcGxlLmNvbSIsImp0aSI6Ijc2YjU1N2QxLTBiNGMtNDYzMS1hMTg2LWI5OWFkYTBkZjcwMCIsImV4cCI6MTcxNzgyNzg3MiwiaXNzIjoiQXBwdHMiLCJhdWQiOiJBcHB0cyJ9.hUmeY6nabVD9MUi_uv9k-NxekT7wfMVAcC_o1G1Xh08");
         appointment = await Http.GetFromJsonAsync<AppointmentsResponse>("api/appointments/8F61C651-EBF0-4627-B4B9-536A373C8921");
