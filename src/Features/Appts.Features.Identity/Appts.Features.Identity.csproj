@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="FastEndpoints" Version="5.26.0" />
+		<PackageReference Include="FastEndpoints.Security" Version="5.26.0" />
 		<PackageReference Include="MediatR" Version="12.2.0" />
 	</ItemGroup>
 	<ItemGroup>

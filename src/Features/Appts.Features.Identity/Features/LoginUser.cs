@@ -31,9 +31,9 @@ public class LoginUserEndpoint : Endpoint<LoginUserModel,
     {
         var result = await _mediator.Send(new LoginUserCommand(request));
 
-        if (result != null && result != string.Empty)
+        if (result)
         {
-            return TypedResults.Ok(new LoginUserResponseModel(result));
+            return TypedResults.Ok(new LoginUserResponseModel("OK"));
         }
         else
         {
@@ -48,33 +48,35 @@ public record LoginUserModel(string Email, string Password);
 
 public record LoginUserResponseModel(string Token);
 
-public record LoginUserCommand(LoginUserModel model) : IRequest<string>;
+public record LoginUserCommand(LoginUserModel model) : IRequest<bool>;
 
-internal class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, string>
+internal class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, bool>
 {
     private UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IPublisher _publisher;
     private readonly IConfiguration _configuration;
 
-    public LoginUserCommandHandler(UserManager<ApplicationUser> userManager, IPublisher publisher, IConfiguration configuration)
+    public LoginUserCommandHandler(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IPublisher publisher, IConfiguration configuration)
     {
         _userManager = userManager;
+        _signInManager = signInManager;
         _publisher = publisher;
         _configuration = configuration;
     }
 
 
-    public async Task<string> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<bool> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByEmailAsync(request.model.Email);
 
         if (user != null && await _userManager.CheckPasswordAsync(user, request.model.Password))
         {
-            var token = GenerateJwtToken(user);
-            return token;
+            await _signInManager.SignInAsync(user, false, null);
+            return true;
         }
 
-        return string.Empty;
+        return false;
     }
 
     private string GenerateJwtToken(ApplicationUser user)
