@@ -15,8 +15,7 @@ namespace Appts.Features.Appointments.Migrations
                 name: "Appointments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Start = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     End = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)

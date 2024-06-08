@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Appts.Features.Appointments.Migrations
 {
     [DbContext(typeof(AppointmentsDbContext))]
-    [Migration("20240604151901_AppointmentsInit")]
+    [Migration("20240608052235_AppointmentsInit")]
     partial class AppointmentsInit
     {
         /// <inheritdoc />
@@ -27,11 +27,9 @@ namespace Appts.Features.Appointments.Migrations
 
             modelBuilder.Entity("Appts.Features.Appointments.Models.Appointment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("End")
                         .HasColumnType("datetimeoffset");
