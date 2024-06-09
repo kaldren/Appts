@@ -6,10 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 [HttpPost("api/identity/login")]
 [AllowAnonymous]
@@ -78,31 +74,4 @@ internal class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, bool>
 
         return false;
     }
-
-    private string GenerateJwtToken(ApplicationUser user)
-    {
-        var claims = new[]
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Issuer"],
-            claims: claims,
-            expires: DateTime.Now.AddMinutes(30),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-}
-
-public static class Settings
-{
-    public static string JwtIssuer { get; } = "appts.com";
-    public static string JwtKey { get; } = "Ek]3U@mFrhyhTu70FUB(yg!b.3j*/(FKzFKL+)[_RQvf?_6jdY";
 }
