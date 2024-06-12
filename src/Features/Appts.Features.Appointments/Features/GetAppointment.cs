@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 #region Endpoint
 [HttpGet("api/appointments/{id}")]
-public class GetAppointmentByIdEndpoint : Endpoint<GetAppointmentByIdQuery, Results<Ok<GetAppointmentByIdResponseModel>, NotFound, ProblemDetails>>
+public class GetAppointmentByIdEndpoint : Endpoint<GetAppointmentByIdQuery, Results<Ok<GetAppointmentByIdResponseModel>, NotFound, ProblemHttpResult>>
 {
     private readonly IMediator _mediator;
 
@@ -15,16 +15,27 @@ public class GetAppointmentByIdEndpoint : Endpoint<GetAppointmentByIdQuery, Resu
     {
         _mediator = mediator;
     }
-    public override async Task<Results<Ok<GetAppointmentByIdResponseModel>, NotFound, ProblemDetails>> ExecuteAsync(GetAppointmentByIdQuery request, CancellationToken cancellationToken)
+    public override async Task<Results<Ok<GetAppointmentByIdResponseModel>, NotFound, ProblemHttpResult>> ExecuteAsync(GetAppointmentByIdQuery request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(request);
+        throw new Exception("This is a test exception");
 
-        if (result != null)
+        try
         {
-            return TypedResults.Ok(result);
-        }
+            throw new Exception("This is a test exception");
 
-        return TypedResults.NotFound();
+            var result = await _mediator.Send(request);
+
+            if (result != null)
+            {
+                return TypedResults.Ok(result);
+            }
+
+            return TypedResults.NotFound();
+        }
+        catch (Exception)
+        {
+            return TypedResults.Problem(detail: "Ship order failed to process.", statusCode: 500);
+        }
     }
 }
 #endregion Endpoint

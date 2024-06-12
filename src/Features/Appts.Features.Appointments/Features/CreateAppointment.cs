@@ -34,6 +34,7 @@ public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentModel,
         return new FastEndpoints.ProblemDetails(ValidationFailures);
     }
 }
+
 public record CreateAppointmentModel(string Title, DateTimeOffset Start, DateTimeOffset End);
 
 public record CreateAppointmentResponseModel(string Title, DateTimeOffset Start, DateTimeOffset End);

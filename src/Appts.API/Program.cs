@@ -40,6 +40,16 @@ builder.Services.AddEndpointsApiExplorer();
 // Add NSwag services
 builder.Services.AddOpenApiDocument();
 
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = ctx =>
+    {
+        // Customize the problem details object here
+        ctx.ProblemDetails.Extensions.Add("traceId", ctx.HttpContext.TraceIdentifier);
+        ctx.ProblemDetails.Extensions.Add("user", ctx.HttpContext.User.Identity.Name);
+    };
+});
+
 var app = builder.Build();
 
 if (builder.Environment.IsDevelopment())
@@ -52,9 +62,11 @@ if (builder.Environment.IsDevelopment())
 // Configure the HTTP request pipeline.
 
 // Create routes for the identity endpoints
+
 app.MapIdentityApi<ApplicationUser>();
 
 app.UseCors("wasm");
+
 
 app.UseAuthentication();
 app.UseAuthorization();
