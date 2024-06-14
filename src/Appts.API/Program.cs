@@ -1,3 +1,4 @@
+using Appts.API.Exceptions;
 using Appts.Features.Appointments;
 using Appts.Features.Appointments.Models;
 using Appts.Features.Emails.Features;
@@ -49,6 +50,7 @@ builder.Services.AddProblemDetails(options =>
         ctx.ProblemDetails.Extensions.Add("user", ctx.HttpContext.User.Identity.Name);
     };
 });
+builder.Services.AddExceptionHandler<ProductionExceptionHandler>();
 
 var app = builder.Build();
 
@@ -58,6 +60,10 @@ if (builder.Environment.IsDevelopment())
     app.UseOpenApi();
     app.UseSwaggerUi(); // UseSwaggerUI Protected by if (env.IsDevelopment())
 }
+if (!builder.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler();
+}
 
 // Configure the HTTP request pipeline.
 
@@ -66,7 +72,6 @@ if (builder.Environment.IsDevelopment())
 app.MapIdentityApi<ApplicationUser>();
 
 app.UseCors("wasm");
-
 
 app.UseAuthentication();
 app.UseAuthorization();
