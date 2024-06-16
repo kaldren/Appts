@@ -18,12 +18,26 @@ internal sealed class ProductionExceptionHandler : IExceptionHandler
         CancellationToken cancellationToken)
     {
         _logger.LogError(
-            exception, "Exception occurred: {Message}", exception.Message);
+            exception,
+            "Exception occurred at {Timestamp}. Type: {ExceptionType}, Message: {ExceptionMessage}, StackTrace: {StackTrace}, TraceID: {TraceID}, User: {UserId}, RequestPath: {RequestPath}",
+            DateTime.UtcNow,
+            exception.GetType().Name,
+            exception.Message,
+            exception.StackTrace,
+            httpContext.TraceIdentifier,
+            httpContext.User.Identity.Name ?? "Anonymous",
+            httpContext.Request.Path);
+
 
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,
-            Title = "An error occurred while processing your request."
+            Title = "We can't handle your request right now. Please try again later.",
+            Instance = httpContext.Request.Path,
+            Extensions =
+            {
+                ["traceId"] = httpContext.TraceIdentifier,
+            }
         };
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;

@@ -1,5 +1,6 @@
 ﻿using Appts.Features.Appointments.Models;
 using FastEndpoints;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -8,12 +9,8 @@ namespace Appts.Features.Appointments.Features;
 
 public class CreateAppointment
 {
-    public record CreateAppointmentModel(string Title, DateTimeOffset Start, DateTimeOffset End);
-    public record CreateAppointmentResponseModel(string Title, DateTimeOffset Start, DateTimeOffset End);
-    public record CreateAppointmentCommand(CreateAppointmentModel Model) : IRequest<CreateAppointmentResponseModel>;
-
     [HttpPost("api/appointments")]
-    public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentModel,
+    public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequestModel,
                                        Results<Ok<CreateAppointmentResponseModel>,
                                                NotFound,
                                                ProblemDetails>>
@@ -27,8 +24,19 @@ public class CreateAppointment
 
         public override async Task<Results<Ok<CreateAppointmentResponseModel>,
                                                NotFound,
-                                               ProblemDetails>> ExecuteAsync(CreateAppointmentModel request, CancellationToken cancellationToken)
+                                               ProblemDetails>> ExecuteAsync(CreateAppointmentRequestModel request, CancellationToken cancellationToken)
         {
+
+            // Validate the request
+            var validationResult = new CreateAppointmentValidator().Validate(request);
+
+            if (!validationResult.IsValid)
+            {
+                validationResult.Errors.ToList().ForEach(x => AddError(x.ErrorMessage));
+
+                return new ProblemDetails(ValidationFailures);
+            }
+            throw new AccessViolationException();
             var result = await _mediator.Send(new CreateAppointmentCommand(request));
 
             if (result != null)
@@ -38,11 +46,13 @@ public class CreateAppointment
 
             AddError("Unable to create an appointment");
 
-            return new FastEndpoints.ProblemDetails(ValidationFailures);
+            return new ProblemDetails(ValidationFailures);
         }
-
-
     }
+
+    public record CreateAppointmentRequestModel(string Title, DateTimeOffset Start, DateTimeOffset End);
+    public record CreateAppointmentResponseModel(string Title, DateTimeOffset Start, DateTimeOffset End);
+    public record CreateAppointmentCommand(CreateAppointmentRequestModel Model) : IRequest<CreateAppointmentResponseModel>;
 
     private class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, CreateAppointmentResponseModel>
     {
@@ -72,6 +82,15 @@ public class CreateAppointment
             {
                 return null;
             }
+        }
+    }
+    private class CreateAppointmentValidator : AbstractValidator<CreateAppointmentRequestModel>
+    {
+        public CreateAppointmentValidator()
+        {
+            RuleFor(x => x.Title).NotEmpty().Length(2, 100);
+            RuleFor(x => x.Start).NotEmpty();
+            RuleFor(x => x.End).NotEmpty();
         }
     }
 }

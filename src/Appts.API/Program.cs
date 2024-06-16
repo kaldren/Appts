@@ -50,7 +50,11 @@ builder.Services.AddProblemDetails(options =>
         ctx.ProblemDetails.Extensions.Add("user", ctx.HttpContext.User.Identity.Name);
     };
 });
-builder.Services.AddExceptionHandler<ProductionExceptionHandler>();
+
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddExceptionHandler<ProductionExceptionHandler>();
+}
 
 var app = builder.Build();
 

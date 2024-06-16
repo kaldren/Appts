@@ -1,4 +1,5 @@
 ﻿using FastEndpoints;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,7 @@ public static class ServiceCollectionExtensions
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddFastEndpoints();
+        services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
 
         return services;
     }
