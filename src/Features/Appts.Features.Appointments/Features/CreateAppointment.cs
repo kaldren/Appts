@@ -36,7 +36,6 @@ public class CreateAppointment
 
                 return new ProblemDetails(ValidationFailures);
             }
-            throw new AccessViolationException();
             var result = await _mediator.Send(new CreateAppointmentCommand(request));
 
             if (result != null)
