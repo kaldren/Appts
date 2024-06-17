@@ -38,4 +38,33 @@ public class CreateAppointmentTests
         Assert.False(result.IsSuccess);
         Assert.Equal("Appointment already exists", result.FailureReason);
     }
+
+    [Fact]
+    public async Task CreateAppointment_StartDateGreaterThanEndDate_ShouldReturnError()
+    {
+        // Arrange
+        var mediatorMock = new Mock<IMediator>();
+        var mockSet = new Mock<DbSet<Appointment>>();
+        var mockDbService = new Mock<IAppointmentsDb>();
+
+        mockDbService.Setup(m => m.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var createAppointmentHandler = new CreateAppointment.CreateAppointmentCommandHandler(mockDbService.Object);
+
+        var createAppointmentRequest = new CreateAppointment.CreateAppointmentRequestModel(
+            "xx",
+            new DateTimeOffset(2023, 6, 15, 9, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2023, 6, 10, 10, 0, 0, TimeSpan.Zero) // greater than start date
+        );
+
+        var command = new CreateAppointment.CreateAppointmentCommand(createAppointmentRequest);
+
+        // Act
+        var result = await createAppointmentHandler.Handle(command, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Start date cannot be greater than end date", result.FailureReason);
+    }
 }
