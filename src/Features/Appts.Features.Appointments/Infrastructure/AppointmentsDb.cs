@@ -28,6 +28,27 @@ public class AppointmentsDb : IAppointmentsDb
         {
             return await _dbContext.Appointments.AnyAsync(predicate);
         }
-        return false;
+
+        return await Task.FromResult(false);
+    }
+
+    public async Task<List<Appointment>> GetAllClientAppointmentsAsync(string clientId, CancellationToken cancellationToken)
+    {
+        while (cancellationToken.IsCancellationRequested == false)
+        {
+            return await _dbContext.Appointments.Where(x => x.ClientId == clientId).ToListAsync(cancellationToken);
+        }
+
+        return await Task.FromResult(new List<Appointment>());
+    }
+
+    public async Task<Appointment?> GetAppointmentByClientIdAsync(string clientId, CancellationToken cancellationToken)
+    {
+        while (cancellationToken.IsCancellationRequested == false)
+        {
+            return await _dbContext.Appointments.FirstOrDefaultAsync(x => x.ClientId == clientId, cancellationToken);
+        }
+
+        return await Task.FromResult<Appointment>(null);
     }
 }
