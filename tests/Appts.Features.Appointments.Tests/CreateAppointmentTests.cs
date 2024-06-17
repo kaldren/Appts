@@ -19,8 +19,9 @@ public class CreateAppointmentTests
         var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         var mockSet = new Mock<DbSet<Appointment>>();
         var mockDbService = new Mock<IAppointmentsDb>();
+        string ownerId = "695a820f-760d-46f3-a10c-929b702ab7e0";
 
-        httpContextAccessorMock.Setup(m => m.HttpContext.User.Identity.IsAuthenticated).Returns(true);
+        httpContextAccessorMock.Setup(m => m.HttpContext!.User!.Identity!.IsAuthenticated).Returns(true);
 
         mockDbService.Setup(m => m.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -31,7 +32,7 @@ public class CreateAppointmentTests
             "xxx",
             new DateTimeOffset(2023, 6, 05, 9, 0, 0, TimeSpan.Zero),
             new DateTimeOffset(2023, 6, 05, 10, 0, 0, TimeSpan.Zero),
-            "695a820f-760d-46f3-a10c-929b702ab7e0"
+            ownerId
         );
 
         var command = new CreateAppointment.CreateAppointmentCommand(createAppointmentRequest);
@@ -52,8 +53,9 @@ public class CreateAppointmentTests
         var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         var mockSet = new Mock<DbSet<Appointment>>();
         var mockDbService = new Mock<IAppointmentsDb>();
+        string ownerId = "695a820f-760d-46f3-a10c-929b702ab7e0";
 
-        httpContextAccessorMock.Setup(m => m.HttpContext.User.Identity.IsAuthenticated).Returns(true);
+        httpContextAccessorMock.Setup(m => m.HttpContext!.User!.Identity!.IsAuthenticated).Returns(true);
 
         mockDbService.Setup(m => m.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -64,7 +66,7 @@ public class CreateAppointmentTests
             "xx",
             new DateTimeOffset(2023, 6, 15, 9, 0, 0, TimeSpan.Zero),
             new DateTimeOffset(2023, 6, 10, 10, 0, 0, TimeSpan.Zero), // greater than start date
-            "123"
+            ownerId
         );
 
         var command = new CreateAppointment.CreateAppointmentCommand(createAppointmentRequest);
