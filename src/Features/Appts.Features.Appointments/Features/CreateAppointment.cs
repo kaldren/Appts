@@ -5,14 +5,17 @@ using FastEndpoints;
 using FluentValidation;
 using FluentValidation.Results;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using System.Security.Claims;
 
 namespace Appts.Features.Appointments.Features;
 
 public class CreateAppointment
 {
     [HttpPost("api/appointments")]
+    [Authorize]
     public class CreateAppointmentEndpoint : Endpoint<CreateAppointmentRequestModel,
                                        Results<Ok<CreateAppointmentResponseModel>,
                                                NotFound,
@@ -29,7 +32,6 @@ public class CreateAppointment
                                                NotFound,
                                                ProblemDetails>> ExecuteAsync(CreateAppointmentRequestModel request, CancellationToken cancellationToken)
         {
-
             // Validate the request
             var validationResult = new CreateAppointmentValidator().Validate(request);
 
@@ -39,6 +41,9 @@ public class CreateAppointment
 
                 return new ProblemDetails(ValidationFailures);
             }
+
+            // Get current user id by using nameidentifier claim
+            var clientId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var result = await _mediator.Send(new CreateAppointmentCommand(request));
 
@@ -55,22 +60,30 @@ public class CreateAppointment
             }
         }
     }
-
-    public record CreateAppointmentRequestModel(string Title, DateTimeOffset Start, DateTimeOffset End);
+    public record CreateAppointmentRequestModel(string Title, DateTimeOffset Start, DateTimeOffset End, string OwnerId);
     public record CreateAppointmentResponseModel(string Title, DateTimeOffset Start, DateTimeOffset End);
     public record CreateAppointmentCommand(CreateAppointmentRequestModel Model) : IRequest<CommandResult<CreateAppointmentResponseModel>>;
-
     public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, CommandResult<CreateAppointmentResponseModel>>
     {
         private readonly IAppointmentsDb _appointmentsDb;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public CreateAppointmentCommandHandler(IAppointmentsDb appointmentsDb)
+        public CreateAppointmentCommandHandler(IAppointmentsDb appointmentsDb, IHttpContextAccessor httpContextAccessor)
         {
             _appointmentsDb = appointmentsDb;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<CommandResult<CreateAppointmentResponseModel>> Handle(CreateAppointmentCommand request, CancellationToken cancellationToken)
         {
+            string clientId = null;
+
+            // Check if the client is logged in
+            if (_httpContextAccessor.HttpContext.User.Identity?.IsAuthenticated != true)
+                return CommandResult<CreateAppointmentResponseModel>.Failure("You must be logged in to create an appointment");
+            else
+                clientId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             // Check if the appointment already exists
             var appointmentExists = await _appointmentsDb.AppointmentExistsAsync(x => x.Title == request.Model.Title && x.Start == request.Model.Start && x.End == request.Model.End, cancellationToken);
 
@@ -82,12 +95,19 @@ public class CreateAppointment
             if (request.Model.Start > request.Model.End)
                 return CommandResult<CreateAppointmentResponseModel>.Failure("Start date cannot be greater than end date");
 
+            // You cannot create an appointment for yourself
+            if (request.Model.OwnerId == _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier))
+                return CommandResult<CreateAppointmentResponseModel>.Failure("You cannot create an appointment for yourself");
+
+
             // Add the appointment to the database
             var result = await _appointmentsDb.AddAppointmentAsync(new Appointment
             {
                 Title = request.Model.Title,
                 Start = request.Model.Start,
-                End = request.Model.End
+                End = request.Model.End,
+                OwnerId = request.Model.OwnerId,
+                ClientId = clientId
             }, cancellationToken);
 
 
@@ -105,6 +125,7 @@ public class CreateAppointment
             RuleFor(x => x.Title).NotEmpty().Length(2, 100);
             RuleFor(x => x.Start).NotEmpty();
             RuleFor(x => x.End).NotEmpty();
+            RuleFor(x => x.OwnerId).NotEmpty();
         }
     }
 }
