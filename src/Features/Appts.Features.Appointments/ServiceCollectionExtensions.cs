@@ -1,4 +1,5 @@
-﻿using FastEndpoints;
+﻿using Appts.Features.Appointments.Infrastructure;
+using FastEndpoints;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,8 @@ public static class ServiceCollectionExtensions
 
         services.AddFastEndpoints();
         services.AddValidatorsFromAssembly(typeof(ServiceCollectionExtensions).Assembly);
+
+        services.AddScoped<IAppointmentsDb, AppointmentsDb>();
 
         return services;
     }

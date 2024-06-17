@@ -10,5 +10,5 @@ public class AppointmentsDbContext : DbContext
     {
     }
 
-    public DbSet<Appointment> Appointments { get; set; } = null!;
+    public virtual DbSet<Appointment> Appointments { get; set; } = null!;
 }

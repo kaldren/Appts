@@ -1,4 +1,5 @@
-﻿using Appts.Features.Appointments.Models;
+﻿using Appts.Features.Appointments.Infrastructure;
+using Appts.Features.Appointments.Models;
 using Appts.Shared;
 using FastEndpoints;
 using FluentValidation;
@@ -6,7 +7,6 @@ using FluentValidation.Results;
 using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
 
 namespace Appts.Features.Appointments.Features;
 
@@ -60,19 +60,19 @@ public class CreateAppointment
     public record CreateAppointmentResponseModel(string Title, DateTimeOffset Start, DateTimeOffset End);
     public record CreateAppointmentCommand(CreateAppointmentRequestModel Model) : IRequest<CommandResult<CreateAppointmentResponseModel>>;
 
-    private class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, CommandResult<CreateAppointmentResponseModel>>
+    public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, CommandResult<CreateAppointmentResponseModel>>
     {
-        private readonly AppointmentsDbContext _dbContext;
+        private readonly IAppointmentsDb _appointmentsDb;
 
-        public CreateAppointmentCommandHandler(AppointmentsDbContext dbContext)
+        public CreateAppointmentCommandHandler(IAppointmentsDb appointmentsDb)
         {
-            _dbContext = dbContext;
+            _appointmentsDb = appointmentsDb;
         }
 
         public async Task<CommandResult<CreateAppointmentResponseModel>> Handle(CreateAppointmentCommand request, CancellationToken cancellationToken)
         {
             // Check if the appointment already exists
-            var appointmentExists = await _dbContext.Appointments.AnyAsync(x => x.Title == request.Model.Title && x.Start == request.Model.Start && x.End == request.Model.End);
+            var appointmentExists = await _appointmentsDb.AppointmentExistsAsync(x => x.Title == request.Model.Title && x.Start == request.Model.Start && x.End == request.Model.End, cancellationToken);
 
             // If the appointment already exists, return command result with error message
             if (appointmentExists)
@@ -83,14 +83,13 @@ public class CreateAppointment
                 return CommandResult<CreateAppointmentResponseModel>.Failure("Start date cannot be greater than end date");
 
             // Add the appointment to the database
-            _dbContext.Appointments.Add(new Appointment
+            var result = await _appointmentsDb.AddAppointmentAsync(new Appointment
             {
                 Title = request.Model.Title,
                 Start = request.Model.Start,
                 End = request.Model.End
-            });
+            }, cancellationToken);
 
-            var result = await _dbContext.SaveChangesAsync() > 0;
 
             // If the appointment was not added to the database, return command result with error message
             if (!result)
