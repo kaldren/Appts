@@ -32,7 +32,7 @@ public class AppointmentsDb : IAppointmentsDb
         return await Task.FromResult(false);
     }
 
-    public async Task<List<Appointment>> GetAllClientAppointmentsAsync(string clientId, CancellationToken cancellationToken)
+    public async Task<List<Appointment>> GetAllClientAppointmentsAsync(Guid clientId, CancellationToken cancellationToken)
     {
         while (cancellationToken.IsCancellationRequested == false)
         {
@@ -42,7 +42,7 @@ public class AppointmentsDb : IAppointmentsDb
         return await Task.FromResult(new List<Appointment>());
     }
 
-    public async Task<Appointment?> GetAppointmentByClientIdAsync(string clientId, CancellationToken cancellationToken)
+    public async Task<Appointment?> GetAppointmentByClientIdAsync(Guid clientId, CancellationToken cancellationToken)
     {
         while (cancellationToken.IsCancellationRequested == false)
         {

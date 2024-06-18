@@ -1,81 +1,206 @@
-using Appts.Features.Appointments.Features;
 using Appts.Features.Appointments.Infrastructure;
 using Appts.Features.Appointments.Models;
-using MediatR;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using System.Linq.Expressions;
+using System.Security.Claims;
+using static Appts.Features.Appointments.Features.CreateAppointment;
 
 namespace Appts.Features.Appointments.Tests;
 
 public class CreateAppointmentTests
 {
+    private string mockUserId = "695a820f-760d-46f3-a10c-929b702ab7e0";
+
     [Fact]
-    public async Task CreateAppointment_AppointmentAlreadyExists_ShouldReturnError()
+    public async Task CreateAppointment_ValidRequest_ShouldReturnSuccessResult()
     {
         // Arrange
-        var mediatorMock = new Mock<IMediator>();
-        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        var mockSet = new Mock<DbSet<Appointment>>();
-        var mockDbService = new Mock<IAppointmentsDb>();
-        string ownerId = "695a820f-760d-46f3-a10c-929b702ab7e0";
+        var request = new CreateAppointmentCommand(new CreateAppointmentRequestModel("Test Appointment" + Guid.NewGuid().ToString(), DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), Guid.NewGuid()));
+        var cancellationToken = CancellationToken.None;
 
-        httpContextAccessorMock.Setup(m => m.HttpContext!.User!.Identity!.IsAuthenticated).Returns(true);
-
-        mockDbService.Setup(m => m.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), It.IsAny<CancellationToken>()))
+        var appointmentsDbMock = new Mock<IAppointmentsDb>();
+        appointmentsDbMock.Setup(x => x.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), cancellationToken))
+            .ReturnsAsync(false);
+        appointmentsDbMock.Setup(x => x.AddAppointmentAsync(It.IsAny<Appointment>(), cancellationToken))
             .ReturnsAsync(true);
 
-        var createAppointmentHandler = new CreateAppointment.CreateAppointmentCommandHandler(mockDbService.Object, httpContextAccessorMock.Object);
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.Setup(x => x.HttpContext)
+            .Returns(new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                        new Claim(ClaimTypes.NameIdentifier, mockUserId)
+                })),
+            });
 
-        var createAppointmentRequest = new CreateAppointment.CreateAppointmentRequestModel(
-            "xxx",
-            new DateTimeOffset(2023, 6, 05, 9, 0, 0, TimeSpan.Zero),
-            new DateTimeOffset(2023, 6, 05, 10, 0, 0, TimeSpan.Zero),
-            ownerId
-        );
+        httpContextAccessorMock.Setup(p => p.HttpContext.User.Identity.IsAuthenticated).Returns(true);
+        httpContextAccessorMock.Setup(p => p.HttpContext.User.Claims).Returns(new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                        new Claim(ClaimTypes.NameIdentifier, mockUserId)
+                })).Claims);
 
-        var command = new CreateAppointment.CreateAppointmentCommand(createAppointmentRequest);
+        var handler = new CreateAppointmentCommandHandler(appointmentsDbMock.Object, httpContextAccessorMock.Object);
 
         // Act
-        var result = await createAppointmentHandler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(request, cancellationToken);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal("Appointment already exists", result.FailureReason);
+        result.IsSuccess.Should().BeTrue();
+        result.Payload.Should().NotBeNull();
+        result.Payload.Title.Should().Be(request.Model.Title);
+        result.Payload.Start.Should().Be(request.Model.Start);
+        result.Payload.End.Should().Be(request.Model.End);
+
+        appointmentsDbMock.Verify(x => x.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), cancellationToken), Times.Once);
+        appointmentsDbMock.Verify(x => x.AddAppointmentAsync(It.IsAny<Appointment>(), cancellationToken), Times.Once);
     }
 
     [Fact]
-    public async Task CreateAppointment_StartDateGreaterThanEndDate_ShouldReturnError()
+    public async Task CreateAppointment_AppointmentExists_ShouldReturnFailureResult()
     {
         // Arrange
-        var mediatorMock = new Mock<IMediator>();
+        var request = new CreateAppointmentCommand(new CreateAppointmentRequestModel("Existing Appointment", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), Guid.NewGuid()));
+        var cancellationToken = CancellationToken.None;
+
+        var appointmentsDbMock = new Mock<IAppointmentsDb>();
+        appointmentsDbMock.Setup(x => x.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), cancellationToken))
+            .ReturnsAsync(true);
+
         var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-        var mockSet = new Mock<DbSet<Appointment>>();
-        var mockDbService = new Mock<IAppointmentsDb>();
-        string ownerId = "695a820f-760d-46f3-a10c-929b702ab7e0";
+        httpContextAccessorMock.Setup(x => x.HttpContext)
+            .Returns(new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                        new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+                }))
+            });
 
-        httpContextAccessorMock.Setup(m => m.HttpContext!.User!.Identity!.IsAuthenticated).Returns(true);
+        httpContextAccessorMock.Setup(p => p.HttpContext.User.Identity.IsAuthenticated).Returns(true);
+        httpContextAccessorMock.Setup(p => p.HttpContext.User.Claims).Returns(new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                        new Claim(ClaimTypes.NameIdentifier, mockUserId)
+                })).Claims);
 
-        mockDbService.Setup(m => m.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
-
-        var createAppointmentHandler = new CreateAppointment.CreateAppointmentCommandHandler(mockDbService.Object, httpContextAccessorMock.Object);
-
-        var createAppointmentRequest = new CreateAppointment.CreateAppointmentRequestModel(
-            "xx",
-            new DateTimeOffset(2023, 6, 15, 9, 0, 0, TimeSpan.Zero),
-            new DateTimeOffset(2023, 6, 10, 10, 0, 0, TimeSpan.Zero), // greater than start date
-            ownerId
-        );
-
-        var command = new CreateAppointment.CreateAppointmentCommand(createAppointmentRequest);
+        var handler = new CreateAppointmentCommandHandler(appointmentsDbMock.Object, httpContextAccessorMock.Object);
 
         // Act
-        var result = await createAppointmentHandler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(request, cancellationToken);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal("Start date cannot be greater than end date", result.FailureReason);
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Be("Appointment already exists");
+
+        appointmentsDbMock.Verify(x => x.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), cancellationToken), Times.Once);
+        appointmentsDbMock.Verify(x => x.AddAppointmentAsync(It.IsAny<Appointment>(), cancellationToken), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateAppointment_StartDateGreaterThanEndDate_ShouldReturnFailureResult()
+    {
+        // Arrange
+        var request = new CreateAppointmentCommand(new CreateAppointmentRequestModel("Test Appointment", DateTimeOffset.UtcNow.AddHours(1), DateTimeOffset.UtcNow, Guid.NewGuid()));
+        var cancellationToken = CancellationToken.None;
+
+        var appointmentsDbMock = new Mock<IAppointmentsDb>();
+
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.Setup(x => x.HttpContext)
+            .Returns(new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                        new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())
+                }))
+            });
+
+        httpContextAccessorMock.Setup(p => p.HttpContext.User.Identity.IsAuthenticated).Returns(true);
+        httpContextAccessorMock.Setup(p => p.HttpContext.User.Claims).Returns(new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                        new Claim(ClaimTypes.NameIdentifier, mockUserId)
+                })).Claims);
+
+        var handler = new CreateAppointmentCommandHandler(appointmentsDbMock.Object, httpContextAccessorMock.Object);
+
+        // Act
+        var result = await handler.Handle(request, cancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Be("Start date cannot be greater than end date");
+
+        appointmentsDbMock.Verify(x => x.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), cancellationToken), Times.Once);
+        appointmentsDbMock.Verify(x => x.AddAppointmentAsync(It.IsAny<Appointment>(), cancellationToken), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateAppointment_OwnerIdEqualsUserId_ShouldReturnFailureResult()
+    {
+        // Arrange
+        var userId = new Guid("695a820f-760d-46f3-a10c-929b702ab7e0");
+        var request = new CreateAppointmentCommand(new CreateAppointmentRequestModel("Test Appointment", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), userId));
+        var cancellationToken = CancellationToken.None;
+
+        var appointmentsDbMock = new Mock<IAppointmentsDb>();
+
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.Setup(x => x.HttpContext)
+            .Returns(new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                        new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+                }))
+            });
+
+        httpContextAccessorMock.Setup(p => p.HttpContext.User.Identity.IsAuthenticated).Returns(true);
+        httpContextAccessorMock.Setup(p => p.HttpContext.User.Claims).Returns(new ClaimsPrincipal(new ClaimsIdentity(new[]
+                {
+                        new Claim(ClaimTypes.NameIdentifier, mockUserId)
+                })).Claims);
+
+        var handler = new CreateAppointmentCommandHandler(appointmentsDbMock.Object, httpContextAccessorMock.Object);
+
+        // Act
+        var result = await handler.Handle(request, cancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Be("You cannot create an appointment for yourself");
+
+        appointmentsDbMock.Verify(x => x.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), cancellationToken), Times.Once);
+        appointmentsDbMock.Verify(x => x.AddAppointmentAsync(It.IsAny<Appointment>(), cancellationToken), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_NotAuthenticated_ReturnsFailureResult()
+    {
+        // Arrange
+        var request = new CreateAppointmentCommand(new CreateAppointmentRequestModel("Test Appointment", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), Guid.NewGuid()));
+        var cancellationToken = CancellationToken.None;
+
+        var appointmentsDbMock = new Mock<IAppointmentsDb>();
+
+        var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
+        httpContextAccessorMock.Setup(x => x.HttpContext)
+            .Returns(new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity())
+            });
+
+        var handler = new CreateAppointmentCommandHandler(appointmentsDbMock.Object, httpContextAccessorMock.Object);
+
+        // Act
+        var result = await handler.Handle(request, cancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Be("You must be logged in to create an appointment");
+
+        appointmentsDbMock.Verify(x => x.AppointmentExistsAsync(It.IsAny<Expression<Func<Appointment, bool>>>(), cancellationToken), Times.Never);
+        appointmentsDbMock.Verify(x => x.AddAppointmentAsync(It.IsAny<Appointment>(), cancellationToken), Times.Never);
     }
 }

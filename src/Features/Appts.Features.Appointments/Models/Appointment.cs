@@ -5,6 +5,6 @@ public class Appointment
     public string Title { get; set; } = null!;
     public DateTimeOffset Start { get; set; }
     public DateTimeOffset End { get; set; }
-    public string OwnerId { get; set; }
-    public string ClientId { get; set; }
+    public Guid OwnerId { get; set; }
+    public Guid ClientId { get; set; }
 }

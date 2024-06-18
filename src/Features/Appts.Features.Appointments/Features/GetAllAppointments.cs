@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 #region Endpoint
 [HttpGet("api/appointments")]
-public class GetAllAppointmentsEndpoint : Endpoint<GetAllAppointmentsQuery, Results<Ok<GetAllAppointmentsResponseModel>, NotFound, ProblemHttpResult>>
+public class GetAllAppointmentsEndpoint : Endpoint<GetAllAppointmentsQuery, Results<Ok<List<GetAllAppointmentsResponseModel>>, NotFound, ProblemHttpResult>>
 {
     private readonly IMediator _mediator;
 
@@ -15,13 +15,13 @@ public class GetAllAppointmentsEndpoint : Endpoint<GetAllAppointmentsQuery, Resu
     {
         _mediator = mediator;
     }
-    public override async Task<Results<Ok<GetAllAppointmentsResponseModel>, NotFound, ProblemHttpResult>> ExecuteAsync(GetAllAppointmentsQuery request, CancellationToken cancellationToken)
+    public override async Task<Results<Ok<List<GetAllAppointmentsResponseModel>>, NotFound, ProblemHttpResult>> ExecuteAsync(GetAllAppointmentsQuery request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(request);
 
         if (result != null)
         {
-            return TypedResults.Ok(result);
+            return null;
         }
 
         return TypedResults.NotFound();
@@ -32,7 +32,7 @@ public class GetAllAppointmentsEndpoint : Endpoint<GetAllAppointmentsQuery, Resu
 #region Models
 public class GetAllAppointmentsResponseModel
 {
-    public Guid Id { get; set; }
+    public string AppointmentId { get; set; }
     public string Title { get; set; }
     public DateTimeOffset Start { get; set; }
     public DateTimeOffset End { get; set; }
@@ -40,7 +40,7 @@ public class GetAllAppointmentsResponseModel
 #endregion Models
 
 #region Query
-public record GetAllAppointmentsQuery(Guid Id) : IRequest<GetAllAppointmentsResponseModel>;
+public record GetAllAppointmentsQuery(Guid OwnerId) : IRequest<GetAllAppointmentsResponseModel>;
 
 public class GetAllAppointmentsQueryHandler : IRequestHandler<GetAllAppointmentsQuery, GetAllAppointmentsResponseModel>
 {
@@ -53,20 +53,31 @@ public class GetAllAppointmentsQueryHandler : IRequestHandler<GetAllAppointments
 
     public async Task<GetAllAppointmentsResponseModel> Handle(GetAllAppointmentsQuery request, CancellationToken cancellationToken)
     {
-        var appointment = await _dbContext.Appointments.FindAsync(request.Id);
+        throw new NotImplementedException();
+        //    var appointment = await _dbContext.Appointments
+        //        .Where(p => p.OwnerId == request.OwnerId)
+        //        .Select(p => new GetAllAppointmentsResponseModel
+        //        {
+        //            AppointmentId = p.Id,
+        //            Title = appointment.Title,
+        //            Start = appointment.Start,
+        //            End = appointment.End
+        //        })
+        //        .ToListAsync(cancellationToken);
 
-        if (appointment == null)
-        {
-            return null;
-        }
+        //    if (appointment == null)
+        //    {
+        //        return Task.FromResult<GetAllAppointmentsResponseModel>(null);
+        //    }
 
-        return new GetAllAppointmentsResponseModel
-        {
-            Id = appointment.Id,
-            Title = appointment.Title,
-            Start = appointment.Start,
-            End = appointment.End
-        };
+        //    return new GetAllAppointmentsResponseModel
+        //    {
+        //        Id = appointment.Id,
+        //        Title = appointment.Title,
+        //        Start = appointment.Start,
+        //        End = appointment.End
+        //    };
+        //}
     }
 }
 

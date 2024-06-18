@@ -60,7 +60,7 @@ public class CreateAppointment
             }
         }
     }
-    public record CreateAppointmentRequestModel(string Title, DateTimeOffset Start, DateTimeOffset End, string OwnerId);
+    public record CreateAppointmentRequestModel(string Title, DateTimeOffset Start, DateTimeOffset End, Guid OwnerId);
     public record CreateAppointmentResponseModel(string Title, DateTimeOffset Start, DateTimeOffset End);
     public record CreateAppointmentCommand(CreateAppointmentRequestModel Model) : IRequest<CommandResult<CreateAppointmentResponseModel>>;
     public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, CommandResult<CreateAppointmentResponseModel>>
@@ -76,13 +76,15 @@ public class CreateAppointment
 
         public async Task<CommandResult<CreateAppointmentResponseModel>> Handle(CreateAppointmentCommand request, CancellationToken cancellationToken)
         {
-            string clientId = null;
+            Guid clientIdGuid;
 
             // Check if the client is logged in
-            if (_httpContextAccessor.HttpContext.User.Identity?.IsAuthenticated != true)
+            if (_httpContextAccessor?.HttpContext?.User?.Identity?.IsAuthenticated != true)
                 return CommandResult<CreateAppointmentResponseModel>.Failure("You must be logged in to create an appointment");
-            else
-                clientId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            string? clientIdClaim = _httpContextAccessor?.HttpContext?.User?.Claims.FirstOrDefault(p => p.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            clientIdGuid = new Guid(clientIdClaim);
 
             // Check if the appointment already exists
             var appointmentExists = await _appointmentsDb.AppointmentExistsAsync(x => x.Title == request.Model.Title && x.Start == request.Model.Start && x.End == request.Model.End, cancellationToken);
@@ -96,7 +98,7 @@ public class CreateAppointment
                 return CommandResult<CreateAppointmentResponseModel>.Failure("Start date cannot be greater than end date");
 
             // You cannot create an appointment for yourself
-            if (request.Model.OwnerId == _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier))
+            if (request.Model.OwnerId == clientIdGuid)
                 return CommandResult<CreateAppointmentResponseModel>.Failure("You cannot create an appointment for yourself");
 
 
@@ -107,7 +109,7 @@ public class CreateAppointment
                 Start = request.Model.Start,
                 End = request.Model.End,
                 OwnerId = request.Model.OwnerId,
-                ClientId = clientId
+                ClientId = clientIdGuid
             }, cancellationToken);
 
 
