@@ -140,7 +140,7 @@ public class CreateAppointmentTests
     public async Task CreateAppointment_OwnerIdEqualsUserId_ShouldReturnFailureResult()
     {
         // Arrange
-        var userId = new Guid("695a820f-760d-46f3-a10c-929b702ab7e0");
+        var userId = new Guid(mockUserId);
         var request = new CreateAppointmentCommand(new CreateAppointmentRequestModel("Test Appointment", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddHours(1), userId));
         var cancellationToken = CancellationToken.None;
 
