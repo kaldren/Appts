@@ -84,7 +84,7 @@ public class CreateAppointment
 
             string? clientIdClaim = _httpContextAccessor?.HttpContext?.User?.Claims.FirstOrDefault(p => p.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            clientIdGuid = new Guid(clientIdClaim);
+            clientIdGuid = new Guid(clientIdClaim!);
 
             // Check if the appointment already exists
             var appointmentExists = await _appointmentsDb.AppointmentExistsAsync(x => x.Title == request.Model.Title && x.Start == request.Model.Start && x.End == request.Model.End, cancellationToken);
