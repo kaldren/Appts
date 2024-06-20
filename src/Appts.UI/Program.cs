@@ -22,7 +22,7 @@ builder.Services.AddScoped(
     sp => (IAccountManagement)sp.GetRequiredService<AuthenticationStateProvider>());
 
 builder.Services.AddHttpClient(
-    "Auth",
+    "ApptsAPI",
     opt => opt.BaseAddress = new Uri(builder.Configuration["BackendUrl"] ?? "https://localhost:7120"))
     .AddHttpMessageHandler<CookieHandler>();
 

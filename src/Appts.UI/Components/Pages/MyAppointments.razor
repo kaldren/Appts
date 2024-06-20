@@ -1,5 +1,51 @@
-﻿@page "/"
+﻿@page "/myappointments"
+@using Appts.UI.Features.Appointments
+@using Appts.UI.Features.Identity
+@inject IHttpClientFactory ClientFactory
 
 <PageTitle>My Appointments</PageTitle>
 
 <h1>List of appointments created by me</h1>
+
+@if (appointments == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Appointment ID</th>
+                <th>Appointment Title</th>
+                <th>Appointment Start Date</th>
+                <th>Appointment End Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var appointment in appointments)
+            {
+                <tr>
+                    <td>@appointment.Id</td>
+                    <td>@appointment.Title</td>
+                    <td>@appointment.Start</td>
+                    <td>@appointment.End</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<GetAllAppointmentsResponseModel> appointments = null;
+    private GetCurrentUserResponseModel currentUser = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var client = ClientFactory.CreateClient("ApptsAPI");
+
+        currentUser = await client.GetFromJsonAsync<GetCurrentUserResponseModel>("api/identity/current-user");
+
+        appointments = await client.GetFromJsonAsync<List<GetAllAppointmentsResponseModel>>($"api/appointments/{currentUser.Id}");
+    }
+}

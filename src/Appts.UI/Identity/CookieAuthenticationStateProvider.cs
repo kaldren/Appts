@@ -39,7 +39,7 @@ public class CookieAuthenticationStateProvider : AuthenticationStateProvider, IA
     /// </summary>
     /// <param name="httpClientFactory">Factory to retrieve auth client.</param>
     public CookieAuthenticationStateProvider(IHttpClientFactory httpClientFactory)
-        => _httpClient = httpClientFactory.CreateClient("Auth");
+        => _httpClient = httpClientFactory.CreateClient("ApptsAPI");
 
     /// <summary>
     /// Register a new user.
