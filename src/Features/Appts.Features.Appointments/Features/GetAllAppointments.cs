@@ -7,14 +7,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 #region Endpoint
+[HttpGet("api/appointments/{UserId}")]
 public class GetAllAppointmentsEndpoint : Endpoint<GetAllAppointmentsQuery, Results<Ok<List<GetAllAppointmentsResponseModel>>, NotFound, ProblemHttpResult>>
 {
     private readonly IMediator _mediator;
-
-    public override void Configure()
-    {
-        Get("api/appointments/{OwnerId}");
-    }
 
     public GetAllAppointmentsEndpoint(IMediator mediator)
     {
@@ -45,7 +41,7 @@ public class GetAllAppointmentsResponseModel
 #endregion Models
 
 #region Query
-public record GetAllAppointmentsQuery(string OwnerId) : IRequest<List<GetAllAppointmentsResponseModel>>;
+public record GetAllAppointmentsQuery(string UserId) : IRequest<List<GetAllAppointmentsResponseModel>>;
 
 public class GetAllAppointmentsQueryHandler : IRequestHandler<GetAllAppointmentsQuery, List<GetAllAppointmentsResponseModel>>
 {
@@ -59,7 +55,7 @@ public class GetAllAppointmentsQueryHandler : IRequestHandler<GetAllAppointments
     public async Task<List<GetAllAppointmentsResponseModel>> Handle(GetAllAppointmentsQuery request, CancellationToken cancellationToken)
     {
         var appointments = await _dbContext.Appointments
-            .Where(p => p.OwnerId == Guid.Parse(request.OwnerId))
+            .Where(p => p.OwnerId == Guid.Parse(request.UserId) || p.ClientId == Guid.Parse(request.UserId))
             .Select(p => new GetAllAppointmentsResponseModel
             {
                 Id = p.Id,
@@ -71,7 +67,6 @@ public class GetAllAppointmentsQueryHandler : IRequestHandler<GetAllAppointments
 
         if (appointments == null)
         {
-            // return empty list
             return new List<GetAllAppointmentsResponseModel>();
         }
 
