@@ -27,6 +27,7 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Shared\Appts.Shared\Appts.Shared.csproj" />
+	  <ProjectReference Include="..\Appts.Features.SharedKernel\Appts.Features.SharedKernel.csproj" />
 	</ItemGroup>
 
 </Project>

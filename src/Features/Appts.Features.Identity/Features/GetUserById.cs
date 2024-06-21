@@ -1,25 +1,26 @@
 ﻿using Appts.Features.Identity.Models;
+using Appts.Features.SharedKernel.Features.Identity;
 using FastEndpoints;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using static Appts.Features.Identity.Features.GetUserByIdEndpoint;
 
 namespace Appts.Features.Identity.Features;
 
 [HttpGet("api/identity/{UserId}")]
 public class GetUserByIdEndpoint : Endpoint<GetUserByIdRequestModel, Results<Ok<GetUserByIdResponseModel>, NotFound>>
 {
-    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IMediator _mediator;
 
-    public GetUserByIdEndpoint(UserManager<ApplicationUser> userManager)
+    public GetUserByIdEndpoint(IMediator mediator)
     {
-        _userManager = userManager;
+        _mediator = mediator;
     }
 
     public override async Task<Results<Ok<GetUserByIdResponseModel>, NotFound>> ExecuteAsync(GetUserByIdRequestModel request, CancellationToken cancellationToken)
     {
-        var user = await _userManager.FindByIdAsync(request.UserId);
+        var user = await _mediator.Send(new GetUserByIdQuery(request.UserId));
 
         if (user == null)
         {
@@ -28,7 +29,26 @@ public class GetUserByIdEndpoint : Endpoint<GetUserByIdRequestModel, Results<Ok<
 
         return TypedResults.Ok(new GetUserByIdResponseModel(user.Id, user.UserName, user.Email));
     }
+}
 
-    public record GetUserByIdRequestModel(string UserId);
-    public record GetUserByIdResponseModel(string Id, string UserName, string Email);
+public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, GetUserByIdResponseModel>
+{
+    private readonly UserManager<ApplicationUser> _userManager;
+
+    public GetUserByIdQueryHandler(UserManager<ApplicationUser> userManager)
+    {
+        _userManager = userManager;
+    }
+
+    public async Task<GetUserByIdResponseModel> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(request.UserId);
+
+        if (user == null)
+        {
+            return null;
+        }
+
+        return new GetUserByIdResponseModel(user.Id, user.UserName, user.Email);
+    }
 }

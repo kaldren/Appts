@@ -1,5 +1,6 @@
 ﻿
 using Appts.Features.Appointments;
+using Appts.Features.SharedKernel.Features.Identity;
 using FastEndpoints;
 using MediatR;
 using Microsoft.AspNetCore.Http;
@@ -37,6 +38,7 @@ public class GetAllAppointmentsResponseModel
     public string Title { get; set; } = null!;
     public string Description { get; set; } = null!;
     public Guid HostId { get; set; }
+    public string HostName { get; set; }
     public DateTimeOffset Start { get; set; }
     public DateTimeOffset End { get; set; }
 }
@@ -48,14 +50,23 @@ public record GetAllAppointmentsQuery(string UserId) : IRequest<List<GetAllAppoi
 public class GetAllAppointmentsQueryHandler : IRequestHandler<GetAllAppointmentsQuery, List<GetAllAppointmentsResponseModel>>
 {
     private readonly AppointmentsDbContext _dbContext;
+    private readonly IMediator _mediator;
 
-    public GetAllAppointmentsQueryHandler(AppointmentsDbContext dbContext)
+    public GetAllAppointmentsQueryHandler(AppointmentsDbContext dbContext, IMediator mediator)
     {
         _dbContext = dbContext;
+        _mediator = mediator;
     }
 
     public async Task<List<GetAllAppointmentsResponseModel>> Handle(GetAllAppointmentsQuery request, CancellationToken cancellationToken)
     {
+        var host = await _mediator.Send(new GetUserByIdQuery(request.UserId), cancellationToken);
+
+        if (host == null)
+        {
+            return new List<GetAllAppointmentsResponseModel>();
+        }
+
         var appointments = await _dbContext.Appointments
             .Where(p => p.HostId == Guid.Parse(request.UserId) || p.ClientId == Guid.Parse(request.UserId))
             .Select(p => new GetAllAppointmentsResponseModel
@@ -64,6 +75,7 @@ public class GetAllAppointmentsQueryHandler : IRequestHandler<GetAllAppointments
                 Title = p.Title,
                 Description = p.Description,
                 HostId = p.HostId,
+                HostName = host.UserName,
                 Start = p.Start,
                 End = p.End
             })
