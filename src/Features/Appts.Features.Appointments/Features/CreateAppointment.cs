@@ -60,7 +60,7 @@ public class CreateAppointment
             }
         }
     }
-    public record CreateAppointmentRequestModel(string Title, DateTimeOffset Start, DateTimeOffset End, Guid OwnerId);
+    public record CreateAppointmentRequestModel(string Title, string Description, DateTimeOffset Start, DateTimeOffset End, Guid HostId);
     public record CreateAppointmentResponseModel(string Title, DateTimeOffset Start, DateTimeOffset End);
     public record CreateAppointmentCommand(CreateAppointmentRequestModel Model) : IRequest<CommandResult<CreateAppointmentResponseModel>>;
     public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, CommandResult<CreateAppointmentResponseModel>>
@@ -98,7 +98,7 @@ public class CreateAppointment
                 return CommandResult<CreateAppointmentResponseModel>.Failure("Start date cannot be greater than end date");
 
             // You cannot create an appointment for yourself
-            if (request.Model.OwnerId == clientIdGuid)
+            if (request.Model.HostId == clientIdGuid)
                 return CommandResult<CreateAppointmentResponseModel>.Failure("You cannot create an appointment for yourself");
 
 
@@ -106,9 +106,10 @@ public class CreateAppointment
             var result = await _appointmentsDb.AddAppointmentAsync(new Appointment
             {
                 Title = request.Model.Title,
+                Description = request.Model.Description,
                 Start = request.Model.Start,
                 End = request.Model.End,
-                OwnerId = request.Model.OwnerId,
+                HostId = request.Model.HostId,
                 ClientId = clientIdGuid
             }, cancellationToken);
 
@@ -125,9 +126,10 @@ public class CreateAppointment
         public CreateAppointmentValidator()
         {
             RuleFor(x => x.Title).NotEmpty().Length(2, 100);
+            RuleFor(x => x.Description).NotEmpty().Length(2, 100);
             RuleFor(x => x.Start).NotEmpty();
             RuleFor(x => x.End).NotEmpty();
-            RuleFor(x => x.OwnerId).NotEmpty();
+            RuleFor(x => x.HostId).NotEmpty();
         }
     }
 }

@@ -34,7 +34,9 @@ public class GetAllAppointmentsEndpoint : Endpoint<GetAllAppointmentsQuery, Resu
 public class GetAllAppointmentsResponseModel
 {
     public Guid Id { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public Guid HostId { get; set; }
     public DateTimeOffset Start { get; set; }
     public DateTimeOffset End { get; set; }
 }
@@ -55,11 +57,13 @@ public class GetAllAppointmentsQueryHandler : IRequestHandler<GetAllAppointments
     public async Task<List<GetAllAppointmentsResponseModel>> Handle(GetAllAppointmentsQuery request, CancellationToken cancellationToken)
     {
         var appointments = await _dbContext.Appointments
-            .Where(p => p.OwnerId == Guid.Parse(request.UserId) || p.ClientId == Guid.Parse(request.UserId))
+            .Where(p => p.HostId == Guid.Parse(request.UserId) || p.ClientId == Guid.Parse(request.UserId))
             .Select(p => new GetAllAppointmentsResponseModel
             {
                 Id = p.Id,
                 Title = p.Title,
+                Description = p.Description,
+                HostId = p.HostId,
                 Start = p.Start,
                 End = p.End
             })
